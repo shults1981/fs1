@@ -8,6 +8,8 @@
 #include <ncurses.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <errno.h>
+
 
 //---------------------------------------------------------------
 #define border_x_min (col_max-9*col_max/10)
@@ -41,6 +43,7 @@ typedef struct _TurnPointsArr
 */
 
 //----------------------define global varablre -------------------
+
 Unit Snake, Rabbit;
 static int row,col;
 static int row_l,col_l,row_max,col_max;
@@ -61,7 +64,7 @@ void snake_body_control();
 void snake_move(int);
 void rabbit_factory(void);
 void rander(void);
-void addNewElementInBackOfArr( point** Arr, int* len,int mv_flg);
+int addNewElementInBackOfArr( point** Arr, int* len,int mv_flg);
 void delElementFromBackOfArr( point* Arr, int* len);
 
 
@@ -214,80 +217,72 @@ void rander (void)
 	wrefresh(stdscr);
 }
 
-void addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
+int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 {
 	int i;
 	point **tVar1,**tVar2;
 
-
-	tVar1=(point**)malloc(sizeof(point**)*(*len+1));
-	for(i=0;i<(*len=1);i++)
-		tVar1[i]=(point*)malloc(sizeof(point));
+	(*len)=+1;
+	//tVar1=(point**)malloc(sizeof(point**)*(*len));
+	//for(i=0;i<(*len);i++)
+	//	tVar1[i]=(point*)malloc(sizeof(point));
 	
-
+	
+	Arr=(point**)realloc(*Arr,(*len));
+//	Arr[*len-1]->_x=0;
+//	Arr[*len-1]->_y=0;
+//	Arr[*len-1]->_d=0;
 
 	
-	for (i=0;i<(*len);i++)
+/*	
+	for (i=0;i<(*len-1);i++)
 	{
                 tVar1[i]->_x=Arr[i]->_x;
 		tVar1[i]->_y=Arr[i]->_y;
 		tVar1[i]->_d=Arr[i]->_d;
 	}
-/*
-	switch(tVar1[i]->_d)
+
+	
+	switch(tVar1[*len-2]->_d)
 	{
 	case 1:
-		tVar1[i+1]->_x=tVar1[i]->_x++;
-		tVar1[i+1]->_y=tVar1[i]->_y;
-		tVar1[i+1]->_d=tVar1[i]->_d;
+		tVar1[*len-1]->_x=0;//(tVar1[*len-2]->_x)++;
+		tVar1[*len-1]->_y=0;//tVar1[*len-2]->_y;
+		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
 		break;
 	case 2:
-		tVar1[i+1]->_x=tVar1[i]->_x--;
-		tVar1[i+1]->_y=tVar1[i]->_y;
-		tVar1[i+1]->_d=tVar1[i]->_d;
+		tVar1[*len-1]->_x=0;//(tVar1[*len-2]->_x)--;
+		tVar1[*len-1]->_y=0;//tVar1[*len-2]->_y;
+		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
 		break;
 	case 3:
-		tVar1[i+1]->_x=tVar1[i]->_x;
-		tVar1[i+1]->_y=tVar1[i]->_y--;
-		tVar1[i+1]->_d=tVar1[i]->_d;
+		tVar1[*len-1]->_x=0;//tVar1[*len-2]->_x;
+		tVar1[*len-1]->_y=0;//(tVar1[*len-2]->_y)--;
+		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
 		break;
 
 	case 4:
-		tVar1[i+1]->_x=tVar1[i]->_x;
-		tVar1[i+1]->_y=tVar1[i]->_y++;
-		tVar1[i+1]->_d=tVar1[i]->_d;
+		tVar1[*len-1]->_x=0;//tVar1[*len-2]->_x;
+		tVar1[*len-1]->_y=0;//(tVar1[*len-2]->_y)++;
+		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
 		break;
 	}
-	*len=i;
-*/
-//	tVar2=Arr;
-	free (tVar1);
-
-	Arr=tVar1;
-//	tVar1=tVar2;	
-
-//	free (tVar1);
-}
-
-void delElementFromBackOfArr( point* Arr, int* len)
-{
-	int i;
-	point *tVar1,*tVar2;
-
-	tVar1=(point*)malloc(sizeof(point)*((*len)-1));
 	
-	for (i=0;i<(*len)-1;i++ )
-	{
-		tVar1[i]._x=Arr[i]._x;
-		tVar1[i]._y=Arr[i]._y;
-	}
-	*len=i;
-	
+
 	tVar2=Arr;
 	Arr=tVar1;
 	tVar1=tVar2;	
 
-	free (tVar1);
+
+	for (i=0;i<(*len-1);i++)
+		free (tVar1[i]);
+	//free (tVar1);
+*/
+	return 1;
+}
+
+void delElementFromBackOfArr( point* Arr, int* len)
+{
 }
 
 //============================= MAIN ======================================
@@ -296,6 +291,7 @@ int main (int argc, char** argv)
 {	
 	
 	int i;
+
 	int ch;
 	int ret;
 	struct itimerval del1;
@@ -423,7 +419,11 @@ int main (int argc, char** argv)
 
 
 	//----------- destructors : clear memory  -----------
-		free (Snake.cord);
+	for (i=0;i<Snake.len;i++)
+	{
+		free(Snake.cord);
+	}
+	//	free (Snake.cord);
 		free (Snake.tpa);
 
 
