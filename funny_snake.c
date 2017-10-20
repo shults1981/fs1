@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
-
+//---------------------------------------------------------------
 #define border_x_min (col_max-9*col_max/10)
 #define border_x_max (col_max-2*col_max/10)
 #define border_y_min (row_max-9*row_max/10)
@@ -220,8 +220,8 @@ void addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 	point **tVar1,**tVar2;
 
 
-	tVar1=(point**)malloc(sizeof(point**)*(*len));
-	for(i=0;i<(*len);i++)
+	tVar1=(point**)malloc(sizeof(point**)*(*len+1));
+	for(i=0;i<(*len=1);i++)
 		tVar1[i]=(point*)malloc(sizeof(point));
 	
 
