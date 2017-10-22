@@ -222,19 +222,13 @@ int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 	int i;
 	point **tVar1,**tVar2;
 
-	(*len)=+1;
-	//tVar1=(point**)malloc(sizeof(point**)*(*len));
-	//for(i=0;i<(*len);i++)
-	//	tVar1[i]=(point*)malloc(sizeof(point));
-	
-	
-	Arr=(point**)realloc(*Arr,(*len));
-//	Arr[*len-1]->_x=0;
-//	Arr[*len-1]->_y=0;
-//	Arr[*len-1]->_d=0;
+	(*len)=(*len)+1;
+
+	tVar1=(point**)malloc(sizeof(point**)*(*len));
+	for(i=0;i<(*len);i++)
+		tVar1[i]=(point*)malloc(sizeof(point));
 
 	
-/*	
 	for (i=0;i<(*len-1);i++)
 	{
                 tVar1[i]->_x=Arr[i]->_x;
@@ -242,32 +236,41 @@ int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 		tVar1[i]->_d=Arr[i]->_d;
 	}
 
+/*
+	Arr=(point**)realloc(Arr,(*len));
+	Arr[*len-1]=(point*)malloc(sizeof(point));
+*/
+//	tVar1[*len-1]->_x=0;
+//	tVar1[*len-1]->_y=0;
+//	tVar1[*len-1]->_d=0;
+
 	
 	switch(tVar1[*len-2]->_d)
 	{
 	case 1:
-		tVar1[*len-1]->_x=0;//(tVar1[*len-2]->_x)++;
-		tVar1[*len-1]->_y=0;//tVar1[*len-2]->_y;
-		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
+		tVar1[*len-1]->_x=tVar1[*len-2]->_x++;
+		tVar1[*len-1]->_y=tVar1[*len-2]->_y;
+		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
 		break;
 	case 2:
-		tVar1[*len-1]->_x=0;//(tVar1[*len-2]->_x)--;
-		tVar1[*len-1]->_y=0;//tVar1[*len-2]->_y;
-		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
+		tVar1[*len-1]->_x=tVar1[*len-2]->_x--;
+		tVar1[*len-1]->_y=tVar1[*len-2]->_y;
+		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
 		break;
 	case 3:
-		tVar1[*len-1]->_x=0;//tVar1[*len-2]->_x;
-		tVar1[*len-1]->_y=0;//(tVar1[*len-2]->_y)--;
-		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
+		tVar1[*len-1]->_x=tVar1[*len-2]->_x;
+		tVar1[*len-1]->_y=tVar1[*len-2]->_y--;
+		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
 		break;
 
 	case 4:
-		tVar1[*len-1]->_x=0;//tVar1[*len-2]->_x;
-		tVar1[*len-1]->_y=0;//(tVar1[*len-2]->_y)++;
-		tVar1[*len-1]->_d=0;//tVar1[*len-2]->_d;
+		tVar1[*len-1]->_x=tVar1[*len-2]->_x;
+		tVar1[*len-1]->_y=tVar1[*len-2]->_y++;
+		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
 		break;
 	}
 	
+
 
 	tVar2=Arr;
 	Arr=tVar1;
@@ -276,8 +279,9 @@ int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 
 	for (i=0;i<(*len-1);i++)
 		free (tVar1[i]);
-	//free (tVar1);
-*/
+//	free (tVar1);
+
+
 	return 1;
 }
 
@@ -419,11 +423,12 @@ int main (int argc, char** argv)
 
 
 	//----------- destructors : clear memory  -----------
-	for (i=0;i<Snake.len;i++)
+/*	for (i=0;i<Snake.len;i++)
 	{
-		free(Snake.cord);
+		free(Snake.cord[i]);
 	}
-	//	free (Snake.cord);
+*/
+		free (Snake.cord);
 		free (Snake.tpa);
 
 
