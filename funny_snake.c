@@ -44,7 +44,7 @@ typedef struct _TurnPointsArr
 
 //----------------------define global varablre -------------------
 
-Unit Snake, Rabbit;
+Unit *Snake, *Rabbit;
 static int row,col;
 static int row_l,col_l,row_max,col_max;
 static int move_flag;
@@ -64,7 +64,7 @@ void snake_body_control();
 void snake_move(int);
 void rabbit_factory(void);
 void rander(void);
-int addNewElementInBackOfArr( point** Arr, int* len,int mv_flg);
+point*  addNewElementInBackOfArr( point* Arr, int* len,int mv_flg);
 void delElementFromBackOfArr( point* Arr, int* len);
 
 
@@ -84,13 +84,13 @@ void rabbit_factory(void)
 {
 	if (!rabbitInFild)
 	{
-	 Rabbit.cord->_x=border_x_min+rand()%(border_x_max-border_x_min);
-	 Rabbit.cord->_y=border_y_min+rand()%(border_y_max-border_y_min);
+	 Rabbit->cord->_x=border_x_min+rand()%(border_x_max-border_x_min);
+	 Rabbit->cord->_y=border_y_min+rand()%(border_y_max-border_y_min);
 	 rabbitInFild=1;
 	}
 	else 
 	{
-	 if ((Snake.cord[0]._y==Rabbit.cord->_y)&&(Snake.cord[0]._x==Rabbit.cord->_x))
+	 if ((Snake->cord[0]._y==Rabbit->cord->_y)&&(Snake->cord[0]._x==Rabbit->cord->_x))
 		{
 			RabbitWasEaten=1;
 			rabbitInFild=0;
@@ -104,7 +104,7 @@ void snake_body_control()
 {
 	if (RabbitWasEaten)
 	{
-		addNewElementInBackOfArr( &Snake.cord, &Snake.len,move_flag);
+		Snake->cord=addNewElementInBackOfArr( Snake->cord, &Snake->len,move_flag);
 		RabbitWasEaten=0;
 	}
 
@@ -115,51 +115,51 @@ void snake_move(int mv_flag)
  
  int i;
  
- r_buf1._y=Snake.cord[0]._y;
- r_buf1._x=Snake.cord[0]._x;
- r_buf1._d=Snake.cord[0]._d;
+ r_buf1._y=Snake->cord[0]._y;
+ r_buf1._x=Snake->cord[0]._x;
+ r_buf1._d=Snake->cord[0]._d;
  
  
- for (i=0;i<Snake.len;i++)
+ for (i=0;i<Snake->len;i++)
  {
   	switch(mv_flag)
   	{ 
   	      
   		case 1:
-  			   	if (Snake.cord[0]._x>border_x_min)
+  			   	if (Snake->cord[0]._x>border_x_min)
 				{
-  					Snake.cord[i]._x--;
-					Snake.cord[i]._d=mv_flag;
+  					Snake->cord[i]._x--;
+					Snake->cord[i]._d=mv_flag;
   				}
 				else 
-  					Snake.cord[i]._x=border_x_min;
+  					Snake->cord[i]._x=border_x_min;
   				break;			
  		case 2:
- 				if (Snake.cord[0]._x<border_x_max)
+ 				if (Snake->cord[0]._x<border_x_max)
 				{
- 					Snake.cord[i]._x++;
- 					Snake.cord[i]._d=mv_flag;
+ 					Snake->cord[i]._x++;
+ 					Snake->cord[i]._d=mv_flag;
 				}
 				else 
- 					Snake.cord[i]._y=border_x_max;
+ 					Snake->cord[i]._y=border_x_max;
  				break;
  		case 3:
- 				if (Snake.cord[0]._y>border_y_min)
+ 				if (Snake->cord[0]._y>border_y_min)
 				{
- 					Snake.cord[i]._y--;
-					Snake.cord[i]._d=mv_flag;
+ 					Snake->cord[i]._y--;
+					Snake->cord[i]._d=mv_flag;
 				}
  				else 
- 					Snake.cord[i]._y=border_y_min;
+ 					Snake->cord[i]._y=border_y_min;
  				break;
  		case 4:
- 				if (Snake.cord[0]._y<border_y_max)
+ 				if (Snake->cord[0]._y<border_y_max)
  				{
-					Snake.cord[i]._y++;
-					Snake.cord[i]._d=mv_flag;
+					Snake->cord[i]._y++;
+					Snake->cord[i]._d=mv_flag;
 				} 
 				else 
- 					Snake.cord[i]._y=border_y_max;
+ 					Snake->cord[i]._y=border_y_max;
  				break; 
  			
   		default : break;		
@@ -176,35 +176,35 @@ void rander (void)
 	int i;
 
 	if (rabbitInFild)
-		mvaddch(Rabbit.cord->_y,Rabbit.cord->_x,'*');
+		mvaddch(Rabbit->cord->_y,Rabbit->cord->_x,'*');
 
-	for(i=0;i<Snake.len;i++ )
+	for(i=0;i<Snake->len;i++ )
 	{ 
 		if (move_flag==1)
 		{
 		mvaddch(r_buf1._y,r_buf1._x,' ');
-		mvaddch(Snake.cord[i]._y,Snake.cord[i]._x,'@');
+		mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
 		//r_buf1._y++;
 		r_buf1._x++;
 		}
 		if (move_flag==2)
 		{
 		mvaddch(r_buf1._y,r_buf1._x,' ');
-		mvaddch(Snake.cord[i]._y,Snake.cord[i]._x,'@');
+		mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
 		//r_buf1._y--;
 		r_buf1._x--;
 		}
 		if (move_flag==3)
 		{
 		mvaddch(r_buf1._y,r_buf1._x,' ');
-		mvaddch(Snake.cord[i]._y,Snake.cord[i]._x,'@');
+		mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
 		r_buf1._y++;
 		//r_buf1._x--;
 		}
 		if (move_flag==4)
 		{
 		mvaddch(r_buf1._y,r_buf1._x,' ');
-		mvaddch(Snake.cord[i]._y,Snake.cord[i]._x,'@');
+		mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
 		r_buf1._y--;
 		//r_buf1._x--;
 		}
@@ -217,23 +217,23 @@ void rander (void)
 	wrefresh(stdscr);
 }
 
-int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
+point*  addNewElementInBackOfArr( point* Arr, int* len,int mv_flg)
 {
 	int i;
-	point **tVar1,**tVar2;
+	point *tVar1,*tVar2;
 
 	(*len)=(*len)+1;
 
-	tVar1=(point**)malloc(sizeof(point**)*(*len));
-	for(i=0;i<(*len);i++)
-		tVar1[i]=(point*)malloc(sizeof(point));
+	tVar1=(point*)malloc(sizeof(point*)*(*len));
+//	for(i=0;i<(*len);i++)
+//		tVar1[i]=(point*)malloc(sizeof(point));
 
 	
 	for (i=0;i<(*len-1);i++)
 	{
-                tVar1[i]->_x=Arr[i]->_x;
-		tVar1[i]->_y=Arr[i]->_y;
-		tVar1[i]->_d=Arr[i]->_d;
+                tVar1[i]._x=Arr[i]._x;
+		tVar1[i]._y=Arr[i]._y;
+		tVar1[i]._d=Arr[i]._d;
 	}
 
 /*
@@ -245,28 +245,30 @@ int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 //	tVar1[*len-1]->_d=0;
 
 	
-	switch(tVar1[*len-2]->_d)
+	switch(tVar1[*len-2]._d)
 	{
 	case 1:
-		tVar1[*len-1]->_x=tVar1[*len-2]->_x++;
-		tVar1[*len-1]->_y=tVar1[*len-2]->_y;
-		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
+		tVar1[*len-1]._x=(tVar1[*len-2]._x)+1;
+		tVar1[*len-1]._y=tVar1[*len-2]._y;
+		tVar1[*len-1]._d=tVar1[*len-2]._d;
 		break;
 	case 2:
-		tVar1[*len-1]->_x=tVar1[*len-2]->_x--;
-		tVar1[*len-1]->_y=tVar1[*len-2]->_y;
-		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
+		tVar1[*len-1]._x=(tVar1[*len-2]._x)-1;
+		tVar1[*len-1]._y=tVar1[*len-2]._y;
+		tVar1[*len-1]._d=tVar1[*len-2]._d;
 		break;
 	case 3:
-		tVar1[*len-1]->_x=tVar1[*len-2]->_x;
-		tVar1[*len-1]->_y=tVar1[*len-2]->_y--;
-		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
+		tVar1[*len-1]._x=tVar1[*len-2]._x;
+		tVar1[*len-1]._y=(tVar1[*len-2]._y)-1;
+		tVar1[*len-1]._d=tVar1[*len-2]._d;
 		break;
 
 	case 4:
-		tVar1[*len-1]->_x=tVar1[*len-2]->_x;
-		tVar1[*len-1]->_y=tVar1[*len-2]->_y++;
-		tVar1[*len-1]->_d=tVar1[*len-2]->_d;
+		tVar1[*len-1]._x=tVar1[*len-2]._x;
+		tVar1[*len-1]._y=(tVar1[*len-2]._y)+1;
+		tVar1[*len-1]._d=tVar1[*len-2]._d;
+		break;
+	default:
 		break;
 	}
 	
@@ -277,12 +279,12 @@ int  addNewElementInBackOfArr( point** Arr, int* len,int mv_flg)
 	tVar1=tVar2;	
 
 
-	for (i=0;i<(*len-1);i++)
-		free (tVar1[i]);
-//	free (tVar1);
+//	for (i=0;i<(*len-1);i++)
+//		free (tVar1[i]);
+	free (tVar1);
 
 
-	return 1;
+	return Arr;
 }
 
 void delElementFromBackOfArr( point* Arr, int* len)
@@ -349,29 +351,35 @@ int main (int argc, char** argv)
 	//-----------------initialize units in memory----------
 	
 	calc=0;
+
+	Rabbit=(Unit*)malloc(sizeof(Unit));
+	Rabbit->len=1;
+	Rabbit->cord=(point*)malloc(sizeof(point)*Rabbit->len);
+	Rabbit->cord->_x=0;
+	Rabbit->cord->_y=0;
+	Rabbit->cord->_d=0;
+	Rabbit->tpa=NULL;
 	
-	Snake.len=1;
-	Snake.cord=(point*)malloc(sizeof(point)*Snake.len);
-	for (i=0;i<Snake.len;i++)
+
+	Snake=(Unit*)malloc(sizeof(Unit));
+	Snake->len=1;
+	Snake->cord=(point*)malloc(sizeof(point)*Snake->len);
+	for (i=0;i<Snake->len;i++)
 	 {
-		Snake.cord[i]._y=row_l=row_max/2;
-		Snake.cord[i]._x=col_l=col_max/2+i;
-		Snake.cord[i]._d=1;
+		Snake->cord[i]._y=row_l=row_max/2;
+		Snake->cord[i]._x=col_l=col_max/2+i;
+		Snake->cord[i]._d=1;
 	 }
 
-	Snake.tpa=NULL;
+	Snake->tpa=NULL;
 
-	
-	Rabbit.len=1;
-	Rabbit.cord=(point*)malloc(sizeof(point)*Rabbit.len);
-	Rabbit.cord->_x=0;
-	Rabbit.cord->_y=0;
-	Rabbit.cord->_d=0;
-	Rabbit.tpa=NULL;
-	
+
+
 	rabbitInFild=0;
 	move_flag=1;
 	RabbitWasEaten=0;
+
+
 
 	//TPA.num=0;
 	//TPA.cord=NULL;
@@ -389,29 +397,34 @@ int main (int argc, char** argv)
 		switch(ch)
 		{
 		case KEY_LEFT:
-				if ((Snake.len>1)&&(!(move_flag==2)))
+				if (Snake->len==1)
 					move_flag=1;
-				else 
-					move_flag=1;
+				else
+					if ((Snake->len>1)&&(!(move_flag==2)))
+						move_flag=1;
+
 				break;
 			
 		case KEY_RIGHT:
-				if ((Snake.len>1)&&(!(move_flag==1)))
+				if (Snake->len==1)
 					move_flag=2;
-				else 
-					move_flag=2;
+				else
+					if ((Snake->len>1)&&(!(move_flag==1)))
+						move_flag=2;
 				break;
 		case KEY_UP:
-				if ((Snake.len>1)&&(!(move_flag==4)))
-					move_flag=3;	
-				else 
+				if (Snake->len==1)
 					move_flag=3;
+				else			
+					if ((Snake->len>1)&&(!(move_flag==4)))
+						move_flag=3;	
 				break;
 		case KEY_DOWN:	
-				if ((Snake.len>1)&&(!(move_flag==3)))
-					move_flag=4;	
-				else 
+				if (Snake->len==1)
 					move_flag=4;
+				else			
+					if ((Snake->len>1)&&(!(move_flag==3)))
+						move_flag=4;
 				break; 
 			
 		default : break;
@@ -423,17 +436,24 @@ int main (int argc, char** argv)
 
 
 	//----------- destructors : clear memory  -----------
-/*	for (i=0;i<Snake.len;i++)
+/*
+	for (i=0;i<Snake->len;i++)
 	{
-		free(Snake.cord[i]);
+		free (Snake->cord[i]);
 	}
 */
-		free (Snake.cord);
-		free (Snake.tpa);
+	free (Snake->cord);
+	free (Snake);
+//	free (Snake.tpa);
 
-
-		free (Rabbit.cord);
-		free (Rabbit.tpa);
+/*	for (i=0;i<Rabbit->len;i++)
+	{
+		free(Rabbit->cord[i]);
+	}
+*/
+	free (Rabbit->cord);
+	free (Rabbit);
+//		free (Rabbit.tpa);
 	endwin();
 	return 0;
 }	
