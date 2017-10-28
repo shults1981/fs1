@@ -41,13 +41,13 @@ typedef struct _unit
 
 Unit *Snake, *Rabbit;
 point *snake_body_frame;
+
 static int row,col;
 static int row_max,col_max;
 static int move_flag;
 static int rabbitInFild;
 static int calc;
 static char calc_str[5];
-//static point r_buf1;
 static int RabbitWasEaten; 
 
 
@@ -60,8 +60,10 @@ void snake_body_control();
 void snake_move(int);
 void rabbit_factory(void);
 void rander(void);
-void addNewElementInBackOfArr(point** Arr, int* len);
+void addNewElementInBackOfSnakeBody(point** Arr, int* len);
+void addNewElementInBackOfArr(point** Arr,int* len, point source);
 void delElementFromBackOfArr( point** Arr, int* len);
+void delElementFromBeginOfArr (point** Arr, int* len);
 
 void  copy_body_frame(point * original,point** copy, int len);
 
@@ -100,7 +102,7 @@ void snake_body_control()
 {
 	if (RabbitWasEaten)
 	{
-		addNewElementInBackOfArr(&Snake->cord, &Snake->len);
+		addNewElementInBackOfSnakeBody(&Snake->cord, &Snake->len);
 		RabbitWasEaten=0;
 	}
 
@@ -109,66 +111,78 @@ void snake_body_control()
 void snake_move(int mv_flag)
 {
  
- int i;
+ int i,j;
 
 
- snake_body_control();
- copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
-/*
- if (Snake->cord[0]._d!=mv_flag)
+snake_body_control();
+copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
+
+if (Snake->cord[0]._d!=mv_flag)
 	{
 		Snake->cord[0]._d=mv_flag;
-		addNewElementInBackOfArr(&Snake0->tpa,&Snake->num_tpa);
+		if ((Snake->len>1)&&((Snake->num_tpa)<=(Snake->len-1)))
+			addNewElementInBackOfArr(&Snake->tpa,&Snake->num_tpa, Snake->cord[0]);
 	}
  
-*/ 
  for (i=0;i<Snake->len;i++)
  {
-  	switch(mv_flag)
-  	{ 
-  	      
-  		case 1:
-  			   	if (Snake->cord[0]._x>border_x_min)
-				{
-  					Snake->cord[i]._x--;
-					Snake->cord[i]._d=mv_flag;
-  				}
-				else 
-  					Snake->cord[i]._x=border_x_min;
-  				break;			
- 		case 2:
- 				if (Snake->cord[0]._x<border_x_max)
-				{
- 					Snake->cord[i]._x++;
- 					Snake->cord[i]._d=mv_flag;
-				}
-				else 
- 					Snake->cord[i]._y=border_x_max;
- 				break;
- 		case 3:
- 				if (Snake->cord[0]._y>border_y_min)
-				{
- 					Snake->cord[i]._y--;
-					Snake->cord[i]._d=mv_flag;
-				}
- 				else 
- 					Snake->cord[i]._y=border_y_min;
- 				break;
- 		case 4:
- 				if (Snake->cord[0]._y<border_y_max)
- 				{
-					Snake->cord[i]._y++;
-					Snake->cord[i]._d=mv_flag;
-				} 
-				else 
- 					Snake->cord[i]._y=border_y_max;
- 				break; 
- 			
-  		default : break;		
- 	     
- 	}
- }
 
+	if ((Snake->cord[0]._x>border_x_min)&&(Snake->cord[0]._x<border_x_max)&&(Snake->cord[0]._y>border_y_min)&&(Snake->cord[0]._y<border_y_max))
+	{
+		if (Snake->num_tpa)
+		{
+			for (j=(Snake->num_tpa)-1;j>=0;j--)
+			{
+				if ((Snake->cord[i]._x==Snake->tpa[j]._x)&&(Snake->cord[i]._y==Snake->tpa[j]._y))
+				{
+					switch(Snake->tpa[j]._d)
+					{
+					case 1:
+						Snake->cord[i]._x--;
+						break;
+					case 2:
+						Snake->cord[i]._x++;
+						break;
+					case 3:
+						Snake->cord[i]._y--;
+						break;
+					case 4:
+						Snake->cord[i]._y++;
+						break;
+					default:break;
+					}
+					
+					Snake->cord[i]._d=Snake->tpa[j]._d;
+					if ((i==Snake->len-1)&&(j==0))
+						delElementFromBeginOfArr(&Snake->tpa, &Snake->num_tpa);
+				}
+			}	
+		}
+			switch(Snake->cord[i]._d)
+			{
+			case 1:
+				Snake->cord[i]._x--;
+				break;
+			case 2:
+				Snake->cord[i]._x++;
+				break;
+			case 3:
+				Snake->cord[i]._y--;
+				break;
+			case 4:
+				Snake->cord[i]._y++;
+				break;
+			default:break;
+			}
+				
+	}	
+	else 
+	{	
+		Snake->cord[0]._y=row_max/2;
+		Snake->cord[0]._x=col_max/2+i;
+		Snake->cord[0]._d=1;
+	}  // break;/// exit(0);     //----------- game over
+ }
 
 }
 
@@ -195,7 +209,7 @@ void rander (void)
 	wrefresh(stdscr);
 }
 
-void  addNewElementInBackOfArr( point** Arr, int* len)
+void  addNewElementInBackOfSnakeBody ( point** Arr, int* len)
 {
 	int i;
 	point *tVar1,*tVar2;
@@ -242,13 +256,113 @@ void  addNewElementInBackOfArr( point** Arr, int* len)
 	*Arr=tVar1;
 	tVar1=tVar2;	
 
+	free(tVar1);
+}
+
+void  addNewElementInBackOfArr ( point** Arr, int* len, point source)
+{
+	int i;
+	point *tVar1,*tVar2;
+
+	(*len)=(*len)+1;
+
+	
+	tVar1=(point*)malloc(sizeof(point)*(*len));
+
+	if (Arr==NULL)
+	{
+		tVar1->_x=source._x;
+		tVar1->_y=source._y;
+		tVar1->_d=source._d;
+	}
+	else
+	{
+		for (i=0;i<(*len-1);i++)
+		{
+                	tVar1[i]._x=(*Arr)[i]._x;
+			tVar1[i]._y=(*Arr)[i]._y;
+			tVar1[i]._d=(*Arr)[i]._d;
+		}
+	
+		tVar1[*len-1]._x=source._x;
+		tVar1[*len-1]._y=source._y;
+		tVar1[*len-1]._d=source._d;
+	}
+	tVar2=*Arr;
+	*Arr=tVar1;
+	tVar1=tVar2;
+
+	free(tVar1);	
 }
 
 
 void delElementFromBackOfArr( point** Arr, int* len)
 {
+	int i;
+	point *tVar1,*tVar2;
+
+	(*len)=(*len)-1;
+
+	if (*len!=0)
+	{
+		tVar1=(point*)malloc(sizeof(point)*(*len));
+	
+		for (i=0;i<(*len-1);i++)
+		{
+        	        tVar1[i]._x=(*Arr)[i]._x;
+			tVar1[i]._y=(*Arr)[i]._y;
+			tVar1[i]._d=(*Arr)[i]._d;
+		}
+
+
+		tVar2=*Arr;
+		*Arr=tVar1;
+		tVar1=tVar2;	
+	}
+	else 
+	{
+		tVar1=*Arr;
+		*Arr=NULL;
+	}
+
+	free(tVar1);
+}
+
+void delElementFromBeginOfArr (point** Arr, int* len)
+{
+	int i;
+	point *tVar1,*tVar2;
+
+
+
+	if (*len!=1)
+	{
+		tVar1=(point*)malloc(sizeof(point)*(*len-1));
+	
+		for (i=1;i<(*len);i++)
+		{
+        	        tVar1[i-1]._x=(*Arr)[i]._x;
+			tVar1[i-1]._y=(*Arr)[i]._y;
+			tVar1[i-1]._d=(*Arr)[i]._d;
+		}
+
+
+		tVar2=*Arr;
+		*Arr=tVar1;
+		tVar1=tVar2;	
+	}
+	else 
+	{
+		tVar1=*Arr;
+		*Arr=NULL;
+	}
+
+	free(tVar1);
+
+	(*len)=(*len)-1;
 
 }
+
 
 
 void copy_body_frame(point * original , point **copy, int len)
