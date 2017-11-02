@@ -1,5 +1,6 @@
-// =========================================
+// ==========================================
 // проверка использования библиотеки  ncurses
+// =========== игра змейка ==================
 // ==========================================
 // ==========================================
 	
@@ -9,6 +10,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <unistd.h>
 
 
 //---------------------------------------------------------------
@@ -36,6 +38,10 @@ typedef struct _unit
 } Unit;
 
 
+typedef enum _game_status {game_exit=0, game_new, game_on, game_over} GameStatus;
+
+
+
 
 //----------------------define global varablre -------------------
 
@@ -49,7 +55,7 @@ static int rabbitInFild;
 static int calc;
 static char calc_str[5];
 static int RabbitWasEaten; 
-
+static GameStatus GST;
 
 
 
@@ -80,21 +86,26 @@ void gti_1 (int signo)
 
 void rabbit_factory(void)
 {
+if (GST==game_on)
+ {
+	RabbitWasEaten=0;
 	if (!rabbitInFild)
 	{
-	 Rabbit->cord->_x=border_x_min+rand()%(border_x_max-border_x_min);
-	 Rabbit->cord->_y=border_y_min+rand()%(border_y_max-border_y_min);
-	 rabbitInFild=1;
+		Rabbit->cord->_x=border_x_min+rand()%((border_x_max-border_x_min)-1);
+		Rabbit->cord->_y=border_y_min+rand()%((border_y_max-border_y_min)-1);
+		rabbitInFild=1;
 	}
 	else 
 	{
-	 if ((Snake->cord[0]._y==Rabbit->cord->_y)&&(Snake->cord[0]._x==Rabbit->cord->_x))
-		{
-			RabbitWasEaten=1;
-			rabbitInFild=0;
-	 		calc++;
-		}
+		 if ((Snake->cord[0]._y==Rabbit->cord->_y)&&(Snake->cord[0]._x==Rabbit->cord->_x))
+			{
+				RabbitWasEaten=1;
+				rabbitInFild=0;
+	 			calc++;
+			}
 	}
+ }
+
 }
 
 
@@ -103,7 +114,7 @@ void snake_body_control()
 	if (RabbitWasEaten)
 	{
 		addNewElementInBackOfSnakeBody(&Snake->cord, &Snake->len);
-		RabbitWasEaten=0;
+		//RabbitWasEaten=0;
 	}
 
 }
@@ -111,86 +122,92 @@ void snake_body_control()
 void snake_move(int mv_flag)
 {
  
- int i,j;
+ int i,j,turn_flag;
 
 
-snake_body_control();
-copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
+if (GST==game_on)
+{
+	snake_body_control();
+	copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
 
-if (Snake->cord[0]._d!=mv_flag)
+	if (Snake->cord[0]._d!=mv_flag)
 	{
 		Snake->cord[0]._d=mv_flag;
 		if ((Snake->len>1)&&((Snake->num_tpa)<=(Snake->len-1)))
 			addNewElementInBackOfArr(&Snake->tpa,&Snake->num_tpa, Snake->cord[0]);
 	}
  
- for (i=0;i<Snake->len;i++)
- {
+ 	for (i=0;i<Snake->len;i++)
+ 	{
+		turn_flag=0;
 
-	if ((Snake->cord[0]._x>border_x_min)&&(Snake->cord[0]._x<border_x_max)&&(Snake->cord[0]._y>border_y_min)&&(Snake->cord[0]._y<border_y_max))
-	{
-		if (Snake->num_tpa)
+		if ((Snake->cord[0]._x>border_x_min)&&(Snake->cord[0]._x<border_x_max)&&(Snake->cord[0]._y>border_y_min)&&(Snake->cord[0]._y<border_y_max))
 		{
-			for (j=(Snake->num_tpa)-1;j>=0;j--)
+			if (Snake->num_tpa)
 			{
-				if ((Snake->cord[i]._x==Snake->tpa[j]._x)&&(Snake->cord[i]._y==Snake->tpa[j]._y))
+				for (j=(Snake->num_tpa)-1;j>=0;j--)
 				{
-					switch(Snake->tpa[j]._d)
+					if ((Snake->cord[i]._x==Snake->tpa[j]._x)&&(Snake->cord[i]._y==Snake->tpa[j]._y))
 					{
-					case 1:
-						Snake->cord[i]._x--;
-						break;
-					case 2:
-						Snake->cord[i]._x++;
-						break;
-					case 3:
-						Snake->cord[i]._y--;
-						break;
-					case 4:
-						Snake->cord[i]._y++;
-						break;
-					default:break;
-					}
+						switch(Snake->tpa[j]._d)
+						{
+						case 1:
+							Snake->cord[i]._x--;
+							break;
+						case 2:
+							Snake->cord[i]._x++;
+							break;
+						case 3:
+							Snake->cord[i]._y--;
+							break;
+						case 4:
+							Snake->cord[i]._y++;
+							break;
+						default:break;
+						}
 					
 					Snake->cord[i]._d=Snake->tpa[j]._d;
 					if ((i==Snake->len-1)&&(j==0))
 						delElementFromBeginOfArr(&Snake->tpa, &Snake->num_tpa);
+					turn_flag=1;
+					}
+				}	
+			}
+		
+			if (!turn_flag)
+			{
+				switch(Snake->cord[i]._d)
+				{
+				case 1:
+					Snake->cord[i]._x--;
+					break;
+				case 2:
+					Snake->cord[i]._x++;
+					break;
+				case 3:
+					Snake->cord[i]._y--;
+					break;
+				case 4:
+					Snake->cord[i]._y++;
+					break;
+				default:break;
 				}
 			}	
-		}
-			switch(Snake->cord[i]._d)
-			{
-			case 1:
-				Snake->cord[i]._x--;
-				break;
-			case 2:
-				Snake->cord[i]._x++;
-				break;
-			case 3:
-				Snake->cord[i]._y--;
-				break;
-			case 4:
-				Snake->cord[i]._y++;
-				break;
-			default:break;
-			}
-				
-	}	
-	else 
-	{	
-		Snake->cord[0]._y=row_max/2;
-		Snake->cord[0]._x=col_max/2+i;
-		Snake->cord[0]._d=1;
-	}  // break;/// exit(0);     //----------- game over
- }
+		}	
+		else 
+		  	 GST=game_over;   //----------- game over
+ 	}
+}
 
 }
 
 
 void rander (void)
 {
-	int i;
+int i;
 
+if (GST==game_on)
+{
 	if (rabbitInFild)
 		mvaddch(Rabbit->cord->_y,Rabbit->cord->_x,'*');
 
@@ -205,6 +222,13 @@ void rander (void)
 	sprintf (calc_str,"%d",calc);
 	mvaddstr(border_y_max+3,border_x_min,"Calc-");
 	mvaddstr(border_y_max+3,border_x_min+7,calc_str);
+}
+
+if (GST==game_over)
+{
+	mvaddstr(border_y_max/2,border_x_max/2-5,"G A M E   O V E R !!!!!");
+
+}
 
 	wrefresh(stdscr);
 }
@@ -240,12 +264,12 @@ void  addNewElementInBackOfSnakeBody ( point** Arr, int* len)
 		break;
 	case 3:
 		tVar1[*len-1]._x=tVar1[*len-2]._x;
-		tVar1[*len-1]._y=(tVar1[*len-2]._y)-1;
+		tVar1[*len-1]._y=(tVar1[*len-2]._y)+1;
 		tVar1[*len-1]._d=tVar1[*len-2]._d;
 		break;
 	case 4:
 		tVar1[*len-1]._x=tVar1[*len-2]._x;
-		tVar1[*len-1]._y=(tVar1[*len-2]._y)+1;
+		tVar1[*len-1]._y=(tVar1[*len-2]._y)-1;
 		tVar1[*len-1]._d=tVar1[*len-2]._d;
 		break;
 	default:
@@ -397,15 +421,22 @@ int main (int argc, char** argv)
 
 	int ch;
 	int ret;
-	struct itimerval del1;
+	struct itimerval tmr1, tmr2;
 	
 	srand(time(NULL));
 	//-----------------timer setpoint value--------
-	del1.it_value.tv_sec=0;
-	del1.it_value.tv_usec=200000;
-	del1.it_interval.tv_sec=0;
-	del1.it_interval.tv_usec=200000;
-	
+	tmr1.it_value.tv_sec=0;
+	tmr1.it_value.tv_usec=200000;
+	tmr1.it_interval.tv_sec=0;
+	tmr1.it_interval.tv_usec=200000;
+
+	tmr2.it_value.tv_sec=1;
+	tmr2.it_value.tv_usec=0;
+	tmr2.it_interval.tv_sec=1;
+	tmr2.it_interval.tv_usec=0;
+
+
+
 	signal(SIGALRM, gti_1); //--registering main timer 
 	
 	//-------------init ncurses -----------------------------------
@@ -445,9 +476,10 @@ int main (int argc, char** argv)
 	
 		}
 	}
-	//-----------------initialize units in memory----------
+	//-----------------set varables and initialize units in memory----------
 	
 	calc=0;
+	GST=game_new;
 
 	Rabbit=(Unit*)malloc(sizeof(Unit));
 	Rabbit->len=1;
@@ -480,74 +512,78 @@ int main (int argc, char** argv)
 	move_flag=1;
 	RabbitWasEaten=0;
 
-
-
-	//TPA.num=0;
-	//TPA.cord=NULL;
-
+	
 	//--------------end of initialize -----------------
 	
-	setitimer(ITIMER_REAL,&del1,NULL); // start timer	
+	setitimer(ITIMER_REAL,&tmr1,NULL); // start timer	
 	
 	//--------------------- main cicle---------------		
+
+	GST=game_on;
+
 	while (ch!='q')
 	{
-		
+					
 		ch=wgetch(stdscr);
 		
-		switch(ch)
+		if (GST==game_on)
 		{
-		case KEY_LEFT:
-				if (Snake->len==1)
-					move_flag=1;
-				else
-					if ((Snake->len>1)&&(!(Snake->cord[0]._d==2)))
+			switch(ch)
+		{
+				case KEY_LEFT:
+					if (Snake->len==1)
 						move_flag=1;
-
-				break;
+					else
+						if ((Snake->len>1)&&(!(Snake->cord[0]._d==2)))
+							move_flag=1;
+					break;
 			
-		case KEY_RIGHT:
-				if (Snake->len==1)
-					move_flag=2;
-				else
-					if ((Snake->len>1)&&(!(Snake->cord[0]._d==1)))
-						move_flag=2;
-				break;
-		case KEY_UP:
-				if (Snake->len==1)
-					move_flag=3;
-				else			
-					if ((Snake->len>1)&&(!(Snake->cord[0]._d==4)))
-						move_flag=3;	
-				break;
-		case KEY_DOWN:	
-				if (Snake->len==1)
-					move_flag=4;
-				else			
-					if ((Snake->len>1)&&(!(Snake->cord[0]._d==3)))
-						move_flag=4;
-				break; 
+				case KEY_RIGHT:
+						if (Snake->len==1)
+							move_flag=2;
+						else
+							if ((Snake->len>1)&&(!(Snake->cord[0]._d==1)))
+								move_flag=2;
+						break;
+				case KEY_UP:
+						if (Snake->len==1)
+							move_flag=3;
+							else			
+								if ((Snake->len>1)&&(!(Snake->cord[0]._d==4)))
+									move_flag=3;	
+						break;
+				case KEY_DOWN:	
+						if (Snake->len==1)
+							move_flag=4;
+						else			
+							if ((Snake->len>1)&&(!(Snake->cord[0]._d==3)))
+								move_flag=4;
+						break; 
 			
-		default : break;
+				default : break;
+			}
 		}
-	
 	}
 	//-----------------------end of main cicle----------------
 	
-
+	
 
 	//----------- destructors : clear memory  -----------
 
 
 
+
+
+
+
 	
 	free (Rabbit->cord);
+	free (Rabbit->tpa);
 	free (Rabbit);
-//	free (Rabbit.tpa);
 	
 	free (Snake->cord);
+	free (Snake->tpa);
 	free (Snake);
-//	free (Snake.tpa);
 
 
 	free (snake_body_frame);
