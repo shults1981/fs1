@@ -56,7 +56,7 @@ static int calc;
 static char calc_str[5];
 static int RabbitWasEaten; 
 static GameStatus GST;
-
+static int level;
 
 
 
@@ -70,8 +70,12 @@ void addNewElementInBackOfSnakeBody(point** Arr, int* len);
 void addNewElementInBackOfArr(point** Arr,int* len, point source);
 void delElementFromBackOfArr( point** Arr, int* len);
 void delElementFromBeginOfArr (point** Arr, int* len);
+void copy_body_frame(point * original,point** copy, int len);
+void init_scr();
+void CreateGameFild();
+int InitUnits();
+int DestroyUnits();
 
-void  copy_body_frame(point * original,point** copy, int len);
 
 
 //------------------ define  handlers ----------------------------------
@@ -91,8 +95,8 @@ if (GST==game_on)
 	RabbitWasEaten=0;
 	if (!rabbitInFild)
 	{
-		Rabbit->cord->_x=border_x_min+rand()%((border_x_max-border_x_min)-1);
-		Rabbit->cord->_y=border_y_min+rand()%((border_y_max-border_y_min)-1);
+		Rabbit->cord->_x=border_x_min+rand()%((border_x_max-border_x_min)-1)+1;
+		Rabbit->cord->_y=border_y_min+rand()%((border_y_max-border_y_min)-1)+1;
 		rabbitInFild=1;
 	}
 	else 
@@ -357,8 +361,6 @@ void delElementFromBeginOfArr (point** Arr, int* len)
 	int i;
 	point *tVar1,*tVar2;
 
-
-
 	if (*len!=1)
 	{
 		tVar1=(point*)malloc(sizeof(point)*(*len-1));
@@ -369,7 +371,6 @@ void delElementFromBeginOfArr (point** Arr, int* len)
 			tVar1[i-1]._y=(*Arr)[i]._y;
 			tVar1[i-1]._d=(*Arr)[i]._d;
 		}
-
 
 		tVar2=*Arr;
 		*Arr=tVar1;
@@ -384,7 +385,6 @@ void delElementFromBeginOfArr (point** Arr, int* len)
 	free(tVar1);
 
 	(*len)=(*len)-1;
-
 }
 
 
@@ -410,35 +410,9 @@ void copy_body_frame(point * original , point **copy, int len)
 	free (tVar1);
 }
 
+void init_scr()
+{
 
-
-//============================= MAIN ======================================
-		
-int main (int argc, char** argv)
-{	
-	
-	int i;
-
-	int ch;
-	int ret;
-	struct itimerval tmr1, tmr2;
-	
-	srand(time(NULL));
-	//-----------------timer setpoint value--------
-	tmr1.it_value.tv_sec=0;
-	tmr1.it_value.tv_usec=200000;
-	tmr1.it_interval.tv_sec=0;
-	tmr1.it_interval.tv_usec=200000;
-
-	tmr2.it_value.tv_sec=1;
-	tmr2.it_value.tv_usec=0;
-	tmr2.it_interval.tv_sec=1;
-	tmr2.it_interval.tv_usec=0;
-
-
-
-	signal(SIGALRM, gti_1); //--registering main timer 
-	
 	//-------------init ncurses -----------------------------------
 	initscr();
 	start_color();
@@ -446,13 +420,20 @@ int main (int argc, char** argv)
 	curs_set(0);
 	keypad (stdscr, TRUE);
 	noecho();
-	
 	init_pair (1,COLOR_WHITE,COLOR_BLUE);
 	attron(COLOR_PAIR(1));
-	
-	//---------- clear screen ----------------------
 	getmaxyx(stdscr,row_max,col_max);
-	
+}
+
+void destr_scr()
+{
+	endwin();
+}
+
+void CreateGameFild()
+{
+int row, col;
+
 	for (row=0;row<=row_max;row++)
 	{
 		for (col=0;col<=col_max;col++)
@@ -468,18 +449,15 @@ int main (int argc, char** argv)
 					addch('X');
 				if (row==border_y_max)
 					addch('X');
-
 			}
-
-
 			addch(' ');
-	
 		}
 	}
-	//-----------------set varables and initialize units in memory----------
-	
-	calc=0;
-	GST=game_new;
+}
+
+int InitUnits()
+{
+	int i;
 
 	Rabbit=(Unit*)malloc(sizeof(Unit));
 	Rabbit->len=1;
@@ -489,8 +467,6 @@ int main (int argc, char** argv)
 	Rabbit->cord->_d=0;
 	Rabbit->num_tpa=0;
 	Rabbit->tpa=NULL;
-	
-
 
 	Snake=(Unit*)malloc(sizeof(Unit));
 	Snake->len=1;
@@ -506,16 +482,74 @@ int main (int argc, char** argv)
 
 	snake_body_frame=(point*)malloc(sizeof(point)*(Snake->len));
 
+	return 0;
+}
+
+int DestroyUnits()
+{
+
+	free (Rabbit->cord);
+	free (Rabbit->tpa);
+	free (Rabbit);
+	
+	free (Snake->cord);
+	free (Snake->tpa);
+	free (Snake);
+
+	free (snake_body_frame);
+
+	return 0;
+}
 
 
+
+
+//============================= MAIN ======================================
+		
+int main (int argc, char** argv)
+{	
+	
+	int i;
+
+	int ch;
+	int ret;
+	struct itimerval tmr1, tmr2;
+	
+	srand(time(NULL));
+	signal(SIGALRM, gti_1); //--registering main timer 
+	
+
+	init_scr(); // initialize ncurses;
+	
+	//---------- Make game fild ----------------------
+	
+	CreateGameFild();
+
+	//-----------------set varables and initialize units in memory----------
+	
+	calc=0; 
+	GST=game_new;
+	level=5;
 	rabbitInFild=0;
 	move_flag=1;
 	RabbitWasEaten=0;
 
-	
+	//timer setpoint value
+	tmr1.it_value.tv_sec=0;
+	tmr1.it_value.tv_usec=200000-level*10000;
+	tmr1.it_interval.tv_sec=0;
+	tmr1.it_interval.tv_usec=200000-level*10000;
+
+	tmr2.it_value.tv_sec=1;
+	tmr2.it_value.tv_usec=0;
+	tmr2.it_interval.tv_sec=1;
+	tmr2.it_interval.tv_usec=0;
+
+
+	InitUnits();
+	setitimer(ITIMER_REAL,&tmr1,NULL); // start timer
+
 	//--------------end of initialize -----------------
-	
-	setitimer(ITIMER_REAL,&tmr1,NULL); // start timer	
 	
 	//--------------------- main cicle---------------		
 
@@ -565,31 +599,14 @@ int main (int argc, char** argv)
 		}
 	}
 	//-----------------------end of main cicle----------------
+		
+
+	//----------- delete units  -----------
+	DestroyUnits();
 	
+	//-----------delete screen -------------
+	destr_scr();
 	
-
-	//----------- destructors : clear memory  -----------
-
-
-
-
-
-
-
-	
-	free (Rabbit->cord);
-	free (Rabbit->tpa);
-	free (Rabbit);
-	
-	free (Snake->cord);
-	free (Snake->tpa);
-	free (Snake);
-
-
-	free (snake_body_frame);
-
-	
-	endwin();
 	return 0;
 }	
 
