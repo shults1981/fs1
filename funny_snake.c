@@ -38,7 +38,7 @@ typedef struct _unit
 } Unit;
 
 
-typedef enum _game_status {game_exit=0, game_new, game_on, game_over} GameStatus;
+typedef enum _game_status {game_exit=0, game_menu, game_on, game_over} GameStatus;
 
 
 
@@ -47,6 +47,8 @@ typedef enum _game_status {game_exit=0, game_new, game_on, game_over} GameStatus
 
 Unit *Snake, *Rabbit;
 point *snake_body_frame;
+WINDOW *MainMenu, *tuneMenu;
+
 
 static int row,col;
 static int row_max,col_max;
@@ -57,7 +59,7 @@ static char calc_str[5];
 static int RabbitWasEaten; 
 static GameStatus GST;
 static int level;
-
+//static int tuneMenuStatus;
 
 
 //------------------ declaretion  handlers and functions -------------------------
@@ -75,6 +77,7 @@ void init_scr();
 void CreateGameFild();
 int InitUnits();
 int DestroyUnits();
+void gameMenu(int st);
 
 
 
@@ -201,39 +204,35 @@ if (GST==game_on)
 		else 
 		  	 GST=game_over;   //----------- game over
  	}
-}
+ }
 
 }
 
 
 void rander (void)
 {
-int i;
+	int i;
 
-if (GST==game_on)
-{
-	if (rabbitInFild)
-		mvaddch(Rabbit->cord->_y,Rabbit->cord->_x,'*');
+	if (GST==game_on)
+	{
+		if (rabbitInFild)
+			mvaddch(Rabbit->cord->_y,Rabbit->cord->_x,'*');
 
-	for(i=0;i<Snake->len;i++ )
-	{ 
-		
-		mvaddch(snake_body_frame[i]._y,snake_body_frame[i]._x,' ');
-		mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
+		for(i=0;i<Snake->len;i++ )
+		{ 
+			mvaddch(snake_body_frame[i]._y,snake_body_frame[i]._x,' ');
+			mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
+		}
+
+		sprintf (calc_str,"%d",calc);
+		mvaddstr(border_y_max+3,border_x_min,"Calc-");
+		mvaddstr(border_y_max+3,border_x_min+7,calc_str);
 	}
 
-
-	sprintf (calc_str,"%d",calc);
-	mvaddstr(border_y_max+3,border_x_min,"Calc-");
-	mvaddstr(border_y_max+3,border_x_min+7,calc_str);
-}
-
-if (GST==game_over)
-{
-	mvaddstr(border_y_max/2,border_x_max/2-5,"G A M E   O V E R !!!!!");
-
-}
-
+	if (GST==game_over)
+	{
+		mvaddstr(border_y_max/2,border_x_max/2-5,"G A M E   O V E R !!!!!");
+	}
 	wrefresh(stdscr);
 }
 
@@ -502,6 +501,31 @@ int DestroyUnits()
 }
 
 
+void gameMenu(int st)
+{
+	if (st)
+	{
+		if (!MainMenu)
+		{
+			MainMenu=newwin(10,20,border_y_max/2,border_y_max/2);
+			wmove(MainMenu,0,3);
+			waddstr(MainMenu,"MENU");
+			wmove(MainMenu,2,1);
+			waddstr(MainMenu,"NEW GAME - 'n'");
+			wmove(MainMenu,4,1);
+			waddstr(MainMenu,"LEVEL - 1...9");
+			wmove(MainMenu,6,1);
+			waddstr(MainMenu,"QUIT - 'q'");
+			wrefresh(MainMenu);
+		}	
+	}
+	else 
+		delwin(MainMenu);
+	
+}
+
+
+
 
 
 //============================= MAIN ======================================
@@ -528,8 +552,8 @@ int main (int argc, char** argv)
 	//-----------------set varables and initialize units in memory----------
 	
 	calc=0; 
-	GST=game_new;
-	level=5;
+	GST=game_menu;
+	level=1;
 	rabbitInFild=0;
 	move_flag=1;
 	RabbitWasEaten=0;
@@ -553,17 +577,26 @@ int main (int argc, char** argv)
 	
 	//--------------------- main cicle---------------		
 
-	GST=game_on;
 
+	
+
+	//GST=game_on;
 	while (ch!='q')
 	{
-					
 		ch=wgetch(stdscr);
 		
+		if (GST==game_menu)
+		{
+			gameMenu(1);
+	
+		}	
+		else 
+			gameMenu(0);		
+				
 		if (GST==game_on)
 		{
 			switch(ch)
-		{
+			{
 				case KEY_LEFT:
 					if (Snake->len==1)
 						move_flag=1;
