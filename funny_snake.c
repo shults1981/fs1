@@ -55,7 +55,7 @@ static int row_max,col_max;
 static int move_flag;
 static int rabbitInFild;
 static int calc;
-static char calc_str[5];
+static char str_BUF1[5],str_BUF2[5];
 static int RabbitWasEaten; 
 static GameStatus GST;
 static int level;
@@ -77,7 +77,8 @@ void init_scr();
 void CreateGameFild();
 int InitUnits();
 int DestroyUnits();
-void gameMenu(int st);
+void gameMenuOpen();
+void gameMenuClose();
 
 
 
@@ -224,9 +225,12 @@ void rander (void)
 			mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
 		}
 
-		sprintf (calc_str,"%d",calc);
+		sprintf (str_BUF1,"%d",calc);
 		mvaddstr(border_y_max+3,border_x_min,"Calc-");
-		mvaddstr(border_y_max+3,border_x_min+7,calc_str);
+		mvaddstr(border_y_max+3,border_x_min+7,str_BUF1);
+		sprintf (str_BUF2,"%d",level);
+		mvaddstr(border_y_max+4,border_x_min,"Level-");
+		mvaddstr(border_y_max+4,border_x_min+7,str_BUF2);
 	}
 
 	if (GST==game_over)
@@ -501,29 +505,27 @@ int DestroyUnits()
 }
 
 
-void gameMenu(int st)
+void gameMenuOpen()
 {
-	if (st)
-	{
-		if (!MainMenu)
-		{
-			MainMenu=newwin(10,20,border_y_max/2,border_y_max/2);
-			wmove(MainMenu,0,3);
-			waddstr(MainMenu,"MENU");
-			wmove(MainMenu,2,1);
-			waddstr(MainMenu,"NEW GAME - 'n'");
-			wmove(MainMenu,4,1);
-			waddstr(MainMenu,"LEVEL - 1...9");
-			wmove(MainMenu,6,1);
-			waddstr(MainMenu,"QUIT - 'q'");
-			wrefresh(MainMenu);
-		}	
-	}
-	else 
-		delwin(MainMenu);
-	
+	MainMenu=newwin(10,20,border_y_max/2,border_x_max/2);
+//	init_pair (1,COLOR_WHITE,COLOR_BLUE);
+//	attron(COLOR_PAIR(1));
+	wmove(MainMenu,0,5);
+	waddstr(MainMenu,"MENU");
+	wmove(MainMenu,2,1);
+	waddstr(MainMenu,"NEW GAME - 'n'");
+	wmove(MainMenu,4,1);
+	waddstr(MainMenu,"LEVEL - 1...9");
+	wmove(MainMenu,6,1);
+	waddstr(MainMenu,"QUIT - 'q'");
+	wrefresh(MainMenu);
 }
 
+void gameMenuClose()
+{
+	delwin(MainMenu);
+	MainMenu=NULL;
+}
 
 
 
@@ -538,6 +540,7 @@ int main (int argc, char** argv)
 	int ch;
 	int ret;
 	struct itimerval tmr1, tmr2;
+	char buf1[2]={'0','0'};
 	
 	srand(time(NULL));
 	signal(SIGALRM, gti_1); //--registering main timer 
@@ -549,49 +552,66 @@ int main (int argc, char** argv)
 	
 	CreateGameFild();
 
-	//-----------------set varables and initialize units in memory----------
-	
-	calc=0; 
-	GST=game_menu;
+	                                    //!!!!!-----------------set varables and initialize units in memory----------
+	GST=game_menu;	
 	level=1;
-	rabbitInFild=0;
-	move_flag=1;
-	RabbitWasEaten=0;
-
 	//timer setpoint value
 	tmr1.it_value.tv_sec=0;
-	tmr1.it_value.tv_usec=200000-level*10000;
+	tmr1.it_value.tv_usec=200000;
 	tmr1.it_interval.tv_sec=0;
-	tmr1.it_interval.tv_usec=200000-level*10000;
+	tmr1.it_interval.tv_usec=200000;
 
-	tmr2.it_value.tv_sec=1;
-	tmr2.it_value.tv_usec=0;
-	tmr2.it_interval.tv_sec=1;
-	tmr2.it_interval.tv_usec=0;
-
-
-	InitUnits();
 	setitimer(ITIMER_REAL,&tmr1,NULL); // start timer
 
-	//--------------end of initialize -----------------
+						//-!!!-------------end of initialize -----------------
 	
 	//--------------------- main cicle---------------		
 
-
-	
-
-	//GST=game_on;
 	while (ch!='q')
 	{
 		ch=wgetch(stdscr);
 		
+		if (ch=='m')
+		{
+			GST=game_menu;
+			DestroyUnits();
+		}
+
+
 		if (GST==game_menu)
 		{
-			gameMenu(1);
-	
+			if (!MainMenu)
+				gameMenuOpen();
+			switch (ch)
+			{
+			case 'q':
+				GST=game_exit;
+				gameMenuClose();
+				break;
+			case 'n':
+				GST=game_on;
+				gameMenuClose();
+				CreateGameFild();
+				rabbitInFild=0;
+				move_flag=1;
+				RabbitWasEaten=0;
+				calc=0;
+				InitUnits();
+				//timer setpoint value
+				tmr1.it_value.tv_sec=0;
+				tmr1.it_value.tv_usec=200000-level*10000;
+				tmr1.it_interval.tv_sec=0;
+				tmr1.it_interval.tv_usec=200000-level*10000;
+				setitimer(ITIMER_REAL,&tmr1,NULL);// timer whith new setpoint by level
+				break;
+			case '1'...'9':
+				buf1[0]=ch;
+				level=atoi(buf1);
+				break;
+			
+			}		
 		}	
-		else 
-			gameMenu(0);		
+				
 				
 		if (GST==game_on)
 		{
