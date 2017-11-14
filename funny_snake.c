@@ -424,6 +424,7 @@ void init_scr()
 	keypad (stdscr, TRUE);
 	noecho();
 	init_pair (1,COLOR_WHITE,COLOR_BLUE);
+	init_pair (2,COLOR_WHITE,COLOR_BLUE);
 	attron(COLOR_PAIR(1));
 	getmaxyx(stdscr,row_max,col_max);
 }
@@ -490,17 +491,18 @@ int InitUnits()
 
 int DestroyUnits()
 {
-
-	free (Rabbit->cord);
-	free (Rabbit->tpa);
-	free (Rabbit);
+	if (Rabbit&&Snake)
+	{
+		free (Rabbit->cord);
+		free (Rabbit->tpa);
+		free (Rabbit);
 	
-	free (Snake->cord);
-	free (Snake->tpa);
-	free (Snake);
+		free (Snake->cord);
+		free (Snake->tpa);
+		free (Snake);
 
-	free (snake_body_frame);
-
+		free (snake_body_frame);
+	}
 	return 0;
 }
 
@@ -508,8 +510,9 @@ int DestroyUnits()
 void gameMenuOpen()
 {
 	MainMenu=newwin(10,20,border_y_max/2,border_x_max/2);
-//	init_pair (1,COLOR_WHITE,COLOR_BLUE);
-//	attron(COLOR_PAIR(1));
+	wbkgd(MainMenu,COLOR_PAIR(2));
+	wattron(MainMenu,COLOR_PAIR(2));
+	box(MainMenu,ACS_VLINE,ACS_HLINE);
 	wmove(MainMenu,0,5);
 	waddstr(MainMenu,"MENU");
 	wmove(MainMenu,2,1);
@@ -517,7 +520,9 @@ void gameMenuOpen()
 	wmove(MainMenu,4,1);
 	waddstr(MainMenu,"LEVEL - 1...9");
 	wmove(MainMenu,6,1);
-	waddstr(MainMenu,"QUIT - 'q'");
+	waddstr(MainMenu,"CONTINUE - 'C'");
+	wmove(MainMenu,8,1);
+	waddstr(MainMenu,"EXIT - 'e'");
 	wrefresh(MainMenu);
 }
 
@@ -540,7 +545,7 @@ int main (int argc, char** argv)
 	int ch;
 	int ret;
 	struct itimerval tmr1, tmr2;
-	char buf1[2]={'0','0'};
+	char buf1[2]={'0',0x00};
 	
 	srand(time(NULL));
 	signal(SIGALRM, gti_1); //--registering main timer 
@@ -552,7 +557,10 @@ int main (int argc, char** argv)
 	
 	CreateGameFild();
 
-	                                    //!!!!!-----------------set varables and initialize units in memory----------
+        // initialize  same  variable----------
+	
+	Snake=NULL;
+	Rabbit=NULL;
 	GST=game_menu;	
 	level=1;
 	//timer setpoint value
@@ -563,8 +571,8 @@ int main (int argc, char** argv)
 
 	setitimer(ITIMER_REAL,&tmr1,NULL); // start timer
 
-						//-!!!-------------end of initialize -----------------
-	
+
+
 	//--------------------- main cicle---------------		
 
 	while (ch!='q')
@@ -574,7 +582,7 @@ int main (int argc, char** argv)
 		if (ch=='m')
 		{
 			GST=game_menu;
-			DestroyUnits();
+			//DestroyUnits();
 		}
 
 
@@ -584,9 +592,10 @@ int main (int argc, char** argv)
 				gameMenuOpen();
 			switch (ch)
 			{
-			case 'q':
+			case 'e':
 				GST=game_exit;
 				gameMenuClose();
+				ch='q';
 				break;
 			case 'n':
 				GST=game_on;
@@ -607,6 +616,14 @@ int main (int argc, char** argv)
 			case '1'...'9':
 				buf1[0]=ch;
 				level=atoi(buf1);
+				break;
+			case 'c':
+				if(Snake && Rabbit)
+				{
+					GST=game_on;
+					gameMenuClose();
+					CreateGameFild();
+				}
 				break;
 			
 			}		
