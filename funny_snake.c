@@ -51,6 +51,7 @@ WINDOW *MainMenu, *tuneMenu;
 
 
 static int row,col;
+static int ch;
 static int row_max,col_max;
 static int move_flag;
 static int rabbitInFild;
@@ -64,8 +65,9 @@ static int level;
 
 //------------------ declaretion  handlers and functions -------------------------
 void gti_1(int);
-void snake_body_control();
+void snake_body_manage();
 void snake_move(int);
+void snake_control(int);
 void rabbit_factory(void);
 void rander(void);
 void addNewElementInBackOfSnakeBody(point** Arr, int* len);
@@ -85,11 +87,55 @@ void gameMenuClose();
 //------------------ define  handlers ----------------------------------
 void gti_1 (int signo)
 {
+//	snake_control();
 	rabbit_factory();
 	snake_move(move_flag);
 	rander();		
 		
 }
+
+
+void snake_control (int ch)
+{
+	switch(ch)
+	{
+		case KEY_LEFT:
+			if (Snake->len==1)
+				move_flag=1;
+			else
+				if ((Snake->len>1)&&(!(Snake->cord[0]._d==2)))
+					move_flag=1;
+			break;
+			
+		case KEY_RIGHT:
+			if (Snake->len==1)
+				move_flag=2;
+			else
+				if ((Snake->len>1)&&(!(Snake->cord[0]._d==1)))
+					move_flag=2;
+			break;
+
+		case KEY_UP:
+			if (Snake->len==1)
+				move_flag=3;
+			else			
+				if ((Snake->len>1)&&(!(Snake->cord[0]._d==4)))
+					move_flag=3;	
+			break;
+
+		case KEY_DOWN:	
+			if (Snake->len==1)
+				move_flag=4;
+			else			
+				if ((Snake->len>1)&&(!(Snake->cord[0]._d==3)))
+					move_flag=4;
+			break; 
+		
+		default : break;
+	}
+}
+
+
 
 
 void rabbit_factory(void)
@@ -117,7 +163,7 @@ if (GST==game_on)
 }
 
 
-void snake_body_control()
+void snake_body_manage()
 {
 	if (RabbitWasEaten)
 	{
@@ -135,7 +181,8 @@ void snake_move(int mv_flag)
 
 if (GST==game_on)
 {
-	snake_body_control();
+	snake_body_manage();
+	//snake_body_control();
 	copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
 
 	if (Snake->cord[0]._d!=mv_flag)
@@ -542,7 +589,7 @@ int main (int argc, char** argv)
 	
 	int i;
 
-	int ch;
+//	int ch;
 	int ret;
 	struct itimerval tmr1, tmr2;
 	char buf1[2]={'0',0x00};
@@ -628,45 +675,10 @@ int main (int argc, char** argv)
 			
 			}		
 		}	
-				
-				
+		
 		if (GST==game_on)
-		{
-			switch(ch)
-			{
-				case KEY_LEFT:
-					if (Snake->len==1)
-						move_flag=1;
-					else
-						if ((Snake->len>1)&&(!(Snake->cord[0]._d==2)))
-							move_flag=1;
-					break;
-			
-				case KEY_RIGHT:
-						if (Snake->len==1)
-							move_flag=2;
-						else
-							if ((Snake->len>1)&&(!(Snake->cord[0]._d==1)))
-								move_flag=2;
-						break;
-				case KEY_UP:
-						if (Snake->len==1)
-							move_flag=3;
-							else			
-								if ((Snake->len>1)&&(!(Snake->cord[0]._d==4)))
-									move_flag=3;	
-						break;
-				case KEY_DOWN:	
-						if (Snake->len==1)
-							move_flag=4;
-						else			
-							if ((Snake->len>1)&&(!(Snake->cord[0]._d==3)))
-								move_flag=4;
-						break; 
-			
-				default : break;
-			}
-		}
+			snake_control(ch);
+
 	}
 	//-----------------------end of main cicle----------------
 		
