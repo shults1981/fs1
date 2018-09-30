@@ -11,6 +11,8 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
+
 
 
 //---------------------------------------------------------------
@@ -60,13 +62,18 @@ static char str_BUF1[5],str_BUF2[5];
 static int RabbitWasEaten; 
 static GameStatus GST;
 static int level;
+static int GameImpuls=0;
+static int ImpulsFront=0;
+static int Watchdog=0;
+
+
 //static int tuneMenuStatus;
 
 
 //------------------ declaretion  handlers and functions -------------------------
 void gti_1(int);
 void snake_body_manage();
-void snake_move(int);
+void snake_move(int,int);
 void snake_control(int);
 void rabbit_factory(void);
 void rander(void);
@@ -87,9 +94,11 @@ void gameMenuClose();
 //------------------ define  handlers ----------------------------------
 void gti_1 (int signo)
 {
+	GameImpuls++;
+
 //	snake_control();
 	rabbit_factory();
-	snake_move(move_flag);
+	snake_move(move_flag,0);
 	rander();		
 		
 }
@@ -173,10 +182,11 @@ void snake_body_manage()
 
 }
 
-void snake_move(int mv_flag)
+void snake_move(int mv_flag,int kill_self_flag)
 {
  
- int i,j,turn_flag;
+ int i,j,k,turn_flag,self_closure_flag=0;
+ unsigned int kill_self=0,border_crash=0;
 
 
 if (GST==game_on)
@@ -188,46 +198,61 @@ if (GST==game_on)
 	if (Snake->cord[0]._d!=mv_flag)
 	{
 		Snake->cord[0]._d=mv_flag;
-		if ((Snake->len>1)&&((Snake->num_tpa)<=(Snake->len-1)))
+		if ((Snake->len>1)/*&&((Snake->num_tpa)<=(Snake->len-1))*/)
 			addNewElementInBackOfArr(&Snake->tpa,&Snake->num_tpa, Snake->cord[0]);
 	}
- 
+	else
+	{
+		self_closure_flag=0;
+		i=Snake->num_tpa-1;
+		while(i>=0 && (!self_closure_flag)){
+			if((Snake->cord[0]._x==Snake->tpa[i]._x)&& (Snake->cord[0]._y==Snake->tpa[i]._y)){
+				addNewElementInBackOfArr(&Snake->tpa,&Snake->num_tpa,Snake->cord[0]);
+				self_closure_flag=1;
+			}
+			i-=1;
+		}
+
+	}
+	
+	if (k=Snake->num_tpa)
+		k-=1;
+	
  	for (i=0;i<Snake->len;i++)
  	{
 		turn_flag=0;
-
-		if ((Snake->cord[0]._x>border_x_min)&&(Snake->cord[0]._x<border_x_max)&&(Snake->cord[0]._y>border_y_min)&&(Snake->cord[0]._y<border_y_max))
-		{
-			if (Snake->num_tpa)
+		if (Snake->num_tpa){
+			j=k;
+			while((j>=0)&&(!turn_flag))    //for (j=(Snake->num_tpa)-1;j>=0;j--)
 			{
-				for (j=(Snake->num_tpa)-1;j>=0;j--)
+				if ((Snake->cord[i]._x==Snake->tpa[j]._x)&&(Snake->cord[i]._y==Snake->tpa[j]._y))
 				{
-					if ((Snake->cord[i]._x==Snake->tpa[j]._x)&&(Snake->cord[i]._y==Snake->tpa[j]._y))
+					switch(Snake->tpa[j]._d)
 					{
-						switch(Snake->tpa[j]._d)
-						{
-						case 1:
-							Snake->cord[i]._x--;
-							break;
-						case 2:
-							Snake->cord[i]._x++;
-							break;
-						case 3:
-							Snake->cord[i]._y--;
-							break;
-						case 4:
-							Snake->cord[i]._y++;
-							break;
-						default:break;
-						}
-					
+					case 1:
+						Snake->cord[i]._x--;
+						break;
+					case 2:
+						Snake->cord[i]._x++;
+						break;
+					case 3:
+						Snake->cord[i]._y--;
+						break;
+					case 4:
+						Snake->cord[i]._y++;
+						break;
+					default:break;
+					}
+				
 					Snake->cord[i]._d=Snake->tpa[j]._d;
 					if ((i==Snake->len-1)&&(j==0))
 						delElementFromBeginOfArr(&Snake->tpa, &Snake->num_tpa);
 					turn_flag=1;
-					}
-				}	
+					k-=1;
+				}
+				j-=1;
 			}
+		}
 		
 			if (!turn_flag)
 			{
@@ -248,10 +273,21 @@ if (GST==game_on)
 				default:break;
 				}
 			}	
-		}	
-		else 
-		  	 GST=game_over;   //----------- game over
  	}
+	
+	border_crash=!((Snake->cord[0]._x>border_x_min)&&(Snake->cord[0]._x<border_x_max)&&(Snake->cord[0]._y>border_y_min)&&(Snake->cord[0]._y<border_y_max));
+	if(kill_self_flag){
+		for (i=1;i<Snake->len;i++)
+			if((Snake->cord[0]._x==Snake->cord[i]._x)&&(Snake->cord[0]._y==Snake->cord[i]._y))
+				kill_self=1;
+	}
+
+
+	if (border_crash||kill_self){
+		GST=game_over;
+	}
+	else{	}
+
  }
 
 }
