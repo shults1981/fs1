@@ -21,7 +21,7 @@
 #define border_y_min (row_max-9*row_max/10)
 #define border_y_max (row_max-2*row_max/10)
 
-
+#define NumNextLevelJump 6
 
 typedef struct _point
 {
@@ -40,7 +40,7 @@ typedef struct _unit
 } Unit;
 
 
-typedef enum _game_status {game_exit=0, game_menu, game_on, game_over} GameStatus;
+typedef enum _game_status {game_exit=0, game_menu, game_on, game_over,game_next_level} GameStatus;
 
 
 
@@ -57,11 +57,11 @@ static int ch;
 static int row_max,col_max;
 static int move_flag;
 static int rabbitInFild;
-static int calc;
+static int Score;
 static char str_BUF1[5],str_BUF2[5];
 static int RabbitWasEaten; 
 static GameStatus GST;
-static int level;
+static int Level;
 static int GameImpuls=0;
 static int ImpulsFront=0;
 static int Watchdog=0;
@@ -73,10 +73,10 @@ static int Watchdog=0;
 //------------------ declaretion  handlers and functions -------------------------
 void gti_1(int);
 void snake_body_manage();
-void snake_move(int,int);
+void SnakeMoveToOneStep(int mv_flag,int kill_self_flag);
 void snake_control(int);
-void rabbit_factory(void);
-void rander(void);
+void RabbitFactory(void);
+void rander(int frame_flag);
 void addNewElementInBackOfSnakeBody(point** Arr, int* len);
 void addNewElementInBackOfArr(point** Arr,int* len, point source);
 void delElementFromBackOfArr( point** Arr, int* len);
@@ -94,13 +94,7 @@ void gameMenuClose();
 //------------------ define  handlers ----------------------------------
 void gti_1 (int signo)
 {
-	GameImpuls++;
-
-//	snake_control();
-	rabbit_factory();
-	snake_move(move_flag,0);
-	rander();		
-		
+	GameImpuls++;		
 }
 
 
@@ -147,7 +141,7 @@ void snake_control (int ch)
 
 
 
-void rabbit_factory(void)
+void RabbitFactory(void)
 {
 if (GST==game_on)
  {
@@ -164,7 +158,7 @@ if (GST==game_on)
 			{
 				RabbitWasEaten=1;
 				rabbitInFild=0;
-	 			calc++;
+	 			Score++;
 			}
 	}
  }
@@ -177,12 +171,11 @@ void snake_body_manage()
 	if (RabbitWasEaten)
 	{
 		addNewElementInBackOfSnakeBody(&Snake->cord, &Snake->len);
-		//RabbitWasEaten=0;
 	}
 
 }
 
-void snake_move(int mv_flag,int kill_self_flag)
+void SnakeMoveToOneStep(int mv_flag,int kill_self_flag)
 {
  
  int i,j,k,turn_flag,self_closure_flag=0;
@@ -193,8 +186,7 @@ if (GST==game_on)
 {
 	snake_body_manage();
 	//snake_body_control();
-	copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
-
+	//copy_body_frame(Snake->cord,&snake_body_frame,Snake->len);
 	if (Snake->cord[0]._d!=mv_flag)
 	{
 		Snake->cord[0]._d=mv_flag;
@@ -212,7 +204,6 @@ if (GST==game_on)
 			}
 			i-=1;
 		}
-
 	}
 	
 	if (k=Snake->num_tpa)
@@ -223,7 +214,7 @@ if (GST==game_on)
 		turn_flag=0;
 		if (Snake->num_tpa){
 			j=k;
-			while((j>=0)&&(!turn_flag))    //for (j=(Snake->num_tpa)-1;j>=0;j--)
+			while((j>=0)&&(!turn_flag))
 			{
 				if ((Snake->cord[i]._x==Snake->tpa[j]._x)&&(Snake->cord[i]._y==Snake->tpa[j]._y))
 				{
@@ -293,7 +284,7 @@ if (GST==game_on)
 }
 
 
-void rander (void)
+void rander (int frame_flag)
 {
 	int i;
 
@@ -303,17 +294,19 @@ void rander (void)
 			mvaddch(Rabbit->cord->_y,Rabbit->cord->_x,'*');
 
 		for(i=0;i<Snake->len;i++ )
-		{ 
-			mvaddch(snake_body_frame[i]._y,snake_body_frame[i]._x,' ');
-			mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
+		{ 	if (frame_flag)
+		//		mvaddch(snake_body_frame[i]._y,snake_body_frame[i]._x,' ');
+				mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,'@');
+			else
+				mvaddch(Snake->cord[i]._y,Snake->cord[i]._x,' ');
 		}
 
-		sprintf (str_BUF1,"%d",calc);
-		mvaddstr(border_y_max+3,border_x_min,"Calc-");
-		mvaddstr(border_y_max+3,border_x_min+7,str_BUF1);
-		sprintf (str_BUF2,"%d",level);
-		mvaddstr(border_y_max+4,border_x_min,"Level-");
-		mvaddstr(border_y_max+4,border_x_min+7,str_BUF2);
+		sprintf (str_BUF1,"%d",Score);
+		mvaddstr(border_y_max+1,border_x_min,"Score-");
+		mvaddstr(border_y_max+1,border_x_min+7,str_BUF1);
+		sprintf (str_BUF2,"%d",Level);
+		mvaddstr(border_y_max+2,border_x_min,"Level-");
+		mvaddstr(border_y_max+2,border_x_min+7,str_BUF2);
 	}
 
 	if (GST==game_over)
@@ -592,19 +585,19 @@ int DestroyUnits()
 
 void gameMenuOpen()
 {
-	MainMenu=newwin(10,20,border_y_max/2,border_x_max/2);
+	MainMenu=newwin(10,20,border_y_max/2-2,border_x_max/2-5);
 	wbkgd(MainMenu,COLOR_PAIR(2));
 	wattron(MainMenu,COLOR_PAIR(2));
 	box(MainMenu,ACS_VLINE,ACS_HLINE);
-	wmove(MainMenu,0,5);
-	waddstr(MainMenu,"MENU");
-	wmove(MainMenu,2,1);
+	wmove(MainMenu,1,7);
+	waddstr(MainMenu,"MENU:");
+	wmove(MainMenu,3,1);
 	waddstr(MainMenu,"NEW GAME - 'n'");
-	wmove(MainMenu,4,1);
-	waddstr(MainMenu,"LEVEL - 1...9");
-	wmove(MainMenu,6,1);
+	wmove(MainMenu,5,1);
+//	waddstr(MainMenu,"LEVEL - 1...9");
+//	wmove(MainMenu,6,1);
 	waddstr(MainMenu,"CONTINUE - 'C'");
-	wmove(MainMenu,8,1);
+	wmove(MainMenu,7,1);
 	waddstr(MainMenu,"EXIT - 'e'");
 	wrefresh(MainMenu);
 }
@@ -645,12 +638,11 @@ int main (int argc, char** argv)
 	Snake=NULL;
 	Rabbit=NULL;
 	GST=game_menu;	
-	level=1;
 	//timer setpoint value
-	tmr1.it_value.tv_sec=0;
-	tmr1.it_value.tv_usec=200000;
-	tmr1.it_interval.tv_sec=0;
-	tmr1.it_interval.tv_usec=200000;
+//	tmr1.it_value.tv_sec=0;
+//	tmr1.it_value.tv_usec=200000;
+//	tmr1.it_interval.tv_sec=0;
+//	tmr1.it_interval.tv_usec=200000;
 
 	setitimer(ITIMER_REAL,&tmr1,NULL); // start timer
 
@@ -665,7 +657,6 @@ int main (int argc, char** argv)
 		if (ch=='m')
 		{
 			GST=game_menu;
-			//DestroyUnits();
 		}
 
 
@@ -687,19 +678,20 @@ int main (int argc, char** argv)
 				rabbitInFild=0;
 				move_flag=1;
 				RabbitWasEaten=0;
-				calc=0;
+				Score=0;
+				Level=1;
 				InitUnits();
 				//timer setpoint value
 				tmr1.it_value.tv_sec=0;
-				tmr1.it_value.tv_usec=200000-level*10000;
+				tmr1.it_value.tv_usec=200000;
 				tmr1.it_interval.tv_sec=0;
-				tmr1.it_interval.tv_usec=200000-level*10000;
+				tmr1.it_interval.tv_usec=200000;
 				setitimer(ITIMER_REAL,&tmr1,NULL);// timer whith new setpoint by level
 				break;
-			case '1'...'9':
-				buf1[0]=ch;
-				level=atoi(buf1);
-				break;
+//			case '1'...'9':
+//				buf1[0]=ch;
+//				level=atoi(buf1);
+//				break;
 			case 'c':
 				if(Snake && Rabbit)
 				{
@@ -711,10 +703,49 @@ int main (int argc, char** argv)
 			
 			}		
 		}	
-		
-		if (GST==game_on)
-			snake_control(ch);
 
+		
+		if (GST==game_on){
+			if (GameImpuls!=Watchdog){
+				ImpulsFront=1;
+				Watchdog=GameImpuls;
+			}
+			else{
+				ImpulsFront=0;
+			}
+
+			snake_control(ch);
+			
+			if (ImpulsFront){
+				rander(0);
+				RabbitFactory();
+				SnakeMoveToOneStep(move_flag,0);
+				rander(1);
+
+				if(Score>=NumNextLevelJump)
+					GST=game_next_level;
+				 
+			}
+		}
+
+		if (GST==game_next_level){
+				DestroyUnits();
+				GST=game_on;
+		//		gameMenuClose();
+				CreateGameFild();
+				rabbitInFild=0;
+				move_flag=1;
+				RabbitWasEaten=0;
+				Score=0;
+				Level++;
+				InitUnits();
+				//timer setpoint value
+				tmr1.it_value.tv_sec=0;
+				tmr1.it_value.tv_usec=200000-Level*10000;
+				tmr1.it_interval.tv_sec=0;
+				tmr1.it_interval.tv_usec=200000-Level*10000;
+				setitimer(ITIMER_REAL,&tmr1,NULL);// timer whith new setpoint by level
+		}
 	}
 	//-----------------------end of main cicle----------------
 		
