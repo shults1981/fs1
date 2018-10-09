@@ -4,7 +4,7 @@
 
 * Project                                         :<Funny Snake #1>
 
-* Programm name                                   :funny_snake.cpp
+* Programm name                                   :funny_snake.c
 
 * Author                                          :Shults1981
 
